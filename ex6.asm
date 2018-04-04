@@ -4,8 +4,8 @@
 
 				section .data
 				message1 db "Insert n(hex) greater than or equal 0: ",0
-				message2 db "%x!! (hex) = %x%x%x%x (hex)",10,0
-				error1 	 db "Invalid argument: n should be < 42.",10,0
+				message2 db "%x!! (hex) = %08x%08x%08x%08x (hex)",10,0
+				error1 	 db "Invalid argument: n should be < 100.",10,0
 				error2   db "Invalid argument: n should be >= 0.",10,0
 				format   db "%x",0
 				outnum   dd 0,0,0,1					; place 4 32-bit numbers in memory
@@ -24,7 +24,7 @@ main:
 				call 	scanf
 				add 	esp, 8								; after scanf cleanup
 cnd1:
-				cmp 	dword[n], 42					; probably cannot calculate anything over 41(DEC)
+				cmp 	dword[n], 53					; the limit of our calculations
 				jl 		cnd2									; if dword[n] less than 42, jump to cnd2
 				push 	error1								; else show the error
 				call 	printf
@@ -40,15 +40,18 @@ cnd2:
 				jmp 	main									; ask for another number
 start:
 				mov 	ecx, dword[n]					; move n to ecx registry
-				;mov 	edx, 0								; move 0 to edx registry
+				mov 	edx, 0								; move 0 to edx registry
+																		; edx stores what's left after each number addition (carry)
+																		; for use in next iteration
 nextnum:
 				mov 	esi, 16								; esi registry value are not changed by C library functions (like printf)
 nextpart:
 				sub 	esi, 4								; subtract 4 from value stored in esi
-				;mov 	ebx, 0								; [old: move contents of edx into ebx] CHANGED TO move 0 to ebx
+				mov 	ebx, edx							; move what's in edx to ebx
 				mov 	eax, [outnum+esi]			; move contents of what's at memory adress outnum+esi into eax
+
 				mul 	ecx										; perform unsigned multiply on eax with ecx -> (eax*ecx)
-				;add 	eax, ebx							; [OLD eax = eax + ebx] unneeded step!
+				add 	eax, ebx							; eax = eax + ebx (adding what was left in the previous iteration)
 				mov 	[outnum+esi], eax			; store calculation at [outnum+esi]
 
 				cmp 	esi, 0
